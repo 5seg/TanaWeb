@@ -115,7 +115,12 @@ export default component$(() => {
         .map((t) => t.trim())
         .filter(Boolean);
 
-      await saveArticle(apiBase.value, apiToken.value, currentArticle, isEditMode.value);
+      await saveArticle(
+        apiBase.value,
+        apiToken.value,
+        currentArticle,
+        isEditMode.value,
+      );
       setStatus(`Saved "${currentArticle.title}" successfully!`);
       isEditMode.value = true;
       await loadList();
@@ -172,7 +177,7 @@ export default component$(() => {
     <div class="app-container">
       <header class="topbar">
         <div class="brand">
-          <span>📕 TanaWeb</span>
+          <span>Tana Web</span>
         </div>
         <div class="config-bar">
           <input
@@ -180,14 +185,18 @@ export default component$(() => {
             class="api-url"
             placeholder="API URL"
             value={apiBase.value}
-            onInput$={(e) => updateApiBase((e.target as HTMLInputElement).value)}
+            onInput$={(e) =>
+              updateApiBase((e.target as HTMLInputElement).value)
+            }
           />
           <input
             type="password"
             class="api-token"
             placeholder="Bearer Token"
             value={apiToken.value}
-            onInput$={(e) => updateApiToken((e.target as HTMLInputElement).value)}
+            onInput$={(e) =>
+              updateApiToken((e.target as HTMLInputElement).value)
+            }
           />
           <button onClick$={loadList} disabled={isLoading.value}>
             Sync
@@ -196,11 +205,19 @@ export default component$(() => {
         <div class="actions">
           <button onClick$={newArticle}>New</button>
           {isEditMode.value && (
-            <button class="danger" onClick$={handleDelete} disabled={isLoading.value}>
+            <button
+              class="danger"
+              onClick$={handleDelete}
+              disabled={isLoading.value}
+            >
               Delete
             </button>
           )}
-          <button class="primary" onClick$={handleSave} disabled={isLoading.value}>
+          <button
+            class="primary"
+            onClick$={handleSave}
+            disabled={isLoading.value}
+          >
             {isEditMode.value ? "Update" : "Create"}
           </button>
         </div>
@@ -221,7 +238,11 @@ export default component$(() => {
             {articles.value.map((a) => (
               <li
                 key={a.slug}
-                class={currentArticle.slug === a.slug && isEditMode.value ? "active" : ""}
+                class={
+                  currentArticle.slug === a.slug && isEditMode.value
+                    ? "active"
+                    : ""
+                }
                 onClick$={() => selectArticle(a.slug)}
               >
                 <div class="art-title">{a.title}</div>
@@ -250,7 +271,9 @@ export default component$(() => {
                   placeholder="Title"
                   value={currentArticle.title}
                   onInput$={(e) =>
-                    (currentArticle.title = (e.target as HTMLInputElement).value)
+                    (currentArticle.title = (
+                      e.target as HTMLInputElement
+                    ).value)
                   }
                 />
               </div>
@@ -259,7 +282,9 @@ export default component$(() => {
                 placeholder="Description"
                 value={currentArticle.description}
                 onInput$={(e) =>
-                  (currentArticle.description = (e.target as HTMLInputElement).value)
+                  (currentArticle.description = (
+                    e.target as HTMLInputElement
+                  ).value)
                 }
               />
               <div class="row">
@@ -267,14 +292,18 @@ export default component$(() => {
                   type="text"
                   placeholder="Tags (comma separated)"
                   value={tagsInput.value}
-                  onInput$={(e) => (tagsInput.value = (e.target as HTMLInputElement).value)}
+                  onInput$={(e) =>
+                    (tagsInput.value = (e.target as HTMLInputElement).value)
+                  }
                 />
                 <label class="checkbox-row">
                   <input
                     type="checkbox"
                     checked={currentArticle.published}
                     onChange$={(e) =>
-                      (currentArticle.published = (e.target as HTMLInputElement).checked)
+                      (currentArticle.published = (
+                        e.target as HTMLInputElement
+                      ).checked)
                     }
                   />
                   Published
