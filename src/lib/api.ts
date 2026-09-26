@@ -31,19 +31,23 @@ export async function saveArticle(
   apiBase: string,
   token: string,
   article: Article,
-  isEdit: boolean
+  isEdit: boolean,
 ): Promise<{ ok: boolean; slug?: string }> {
   const url = isEdit
     ? `${apiBase.replace(/\/$/, "")}/api/articles/${encodeURIComponent(article.slug)}`
     : `${apiBase.replace(/\/$/, "")}/api/articles`;
 
   const method = isEdit ? "PUT" : "POST";
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+  if (token && token.trim()) {
+    headers["Authorization"] = `Bearer ${token.trim()}`;
+  }
+
   const res = await fetch(url, {
     method,
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token.trim()}`,
-    },
+    headers,
     body: JSON.stringify({
       slug: article.slug,
       title: article.title,
@@ -62,14 +66,19 @@ export async function saveArticle(
 export async function deleteArticle(
   apiBase: string,
   token: string,
-  slug: string
+  slug: string,
 ): Promise<{ ok: boolean }> {
-  const res = await fetch(`${apiBase.replace(/\/$/, "")}/api/articles/${encodeURIComponent(slug)}`, {
-    method: "DELETE",
-    headers: {
-      Authorization: `Bearer ${token.trim()}`,
+  const headers: Record<string, string> = {};
+  if (token && token.trim()) {
+    headers["Authorization"] = `Bearer ${token.trim()}`;
+  }
+  const res = await fetch(
+    `${apiBase.replace(/\/$/, "")}/api/articles/${encodeURIComponent(slug)}`,
+    {
+      method: "DELETE",
+      headers,
     },
-  });
+  );
   const json = await res.json();
   if (!res.ok) throw new Error(json.error || `HTTP ${res.status}`);
   return json;
