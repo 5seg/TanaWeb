@@ -1,6 +1,6 @@
 {
-  "name": "my-qwik-empty-starter",
-  "description": "Blank project with routing included",
+  "name": "tanaweb",
+  "description": "Web editor for Tana CMS",
   "engines": {
     "node": "^18.17.0 || ^20.3.0 || >=21.0.0"
   },
@@ -44,6 +44,7 @@
     "wrangler": "^4.136.1"
   },
   "dependencies": {
+    "dompurify": "^3.4.16",
     "marked": "^18.0.14"
   }
 }

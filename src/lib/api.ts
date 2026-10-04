@@ -14,40 +14,81 @@ export interface ArticlesResponse {
   meta: { total: number };
 }
 
-export async function fetchArticles(apiBase: string): Promise<Article[]> {
-  const res = await fetch(`${apiBase.replace(/\/$/, "")}/articles?limit=100&offset=0`);
-  if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
-  const data = (await res.json()) as ArticlesResponse;
-  return data.data;
+const base = (apiBase: string) => apiBase.replace(/\/$/, "");
+
+// Parse JSON safely; throw "HTTP <status>: <server error>" on failure or non-JSON body.
+async function parse<T>(res: Response): Promise<T> {
+  const text = await res.text();
+  let json: any = null;
+  try {
+    json = text ? JSON.parse(text) : null;
+  } catch {
+    // not JSON (HTML error page, etc.)
+  }
+  if (!res.ok) {
+    throw new Error(
+      `HTTP ${res.status}: ${json?.error || res.statusText || "request failed"}`,
+    );
+  }
+  if (json === null) throw new Error(`HTTP ${res.status}: response was not JSON`);
+  return json as T;
 }
 
-export async function fetchArticle(apiBase: string, slug: string): Promise<Article> {
-  const res = await fetch(`${apiBase.replace(/\/$/, "")}/articles/${encodeURIComponent(slug)}`);
-  if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
-  return (await res.json()) as Article;
+// No header at all when the token is blank (servers that need no auth).
+const auth = (token: string): Record<string, string> =>
+  token.trim() ? { Authorization: `Bearer ${token.trim()}` } : {};
+
+const PAGE = 100;
+
+// With a token, use the Bearer-protected /api endpoints (includes unpublished
+// drafts); without one, fall back to the public endpoints (published only).
+export async function fetchArticles(apiBase: string, token: string): Promise<Article[]> {
+  const authed = Boolean(token.trim());
+  const all: Article[] = [];
+  let total = 0;
+  do {
+    const res = await fetch(
+      `${base(apiBase)}${authed ? "/api" : ""}/articles?limit=${PAGE}&offset=${all.length}`,
+      authed ? { headers: auth(token) } : undefined,
+    );
+    const page = await parse<ArticlesResponse>(res);
+    total = page.meta.total;
+    if (!page.data.length) break;
+    all.push(...page.data);
+  } while (all.length < total);
+  return all;
+}
+
+export async function fetchArticle(
+  apiBase: string,
+  token: string,
+  slug: string
+): Promise<Article> {
+  const authed = Boolean(token.trim());
+  const res = await fetch(
+    `${base(apiBase)}${authed ? "/api" : ""}/articles/${encodeURIComponent(slug)}`,
+    authed ? { headers: auth(token) } : undefined,
+  );
+  return parse<Article>(res);
 }
 
 export async function saveArticle(
   apiBase: string,
   token: string,
   article: Article,
-  isEdit: boolean,
+  isEdit: boolean
 ): Promise<{ ok: boolean; slug?: string }> {
   const url = isEdit
-    ? `${apiBase.replace(/\/$/, "")}/api/articles/${encodeURIComponent(article.slug)}`
-    : `${apiBase.replace(/\/$/, "")}/api/articles`;
+    ? `${base(apiBase)}/api/articles/${encodeURIComponent(article.slug)}`
+    : `${base(apiBase)}/api/articles`;
 
   const method = isEdit ? "PUT" : "POST";
-  const headers: Record<string, string> = {
-    "Content-Type": "application/json",
-  };
-  if (token && token.trim()) {
-    headers["Authorization"] = `Bearer ${token.trim()}`;
-  }
-
   const res = await fetch(url, {
     method,
-    headers,
+    headers: {
+      "Content-Type": "application/json",
+      ...auth(token),
+    },
     body: JSON.stringify({
       slug: article.slug,
       title: article.title,
@@ -57,29 +98,17 @@ export async function saveArticle(
       tags: article.tags,
     }),
   });
-
-  const json = await res.json();
-  if (!res.ok) throw new Error(json.error || `HTTP ${res.status}`);
-  return json;
+  return parse(res);
 }
 
 export async function deleteArticle(
   apiBase: string,
   token: string,
-  slug: string,
+  slug: string
 ): Promise<{ ok: boolean }> {
-  const headers: Record<string, string> = {};
-  if (token && token.trim()) {
-    headers["Authorization"] = `Bearer ${token.trim()}`;
-  }
-  const res = await fetch(
-    `${apiBase.replace(/\/$/, "")}/api/articles/${encodeURIComponent(slug)}`,
-    {
-      method: "DELETE",
-      headers,
-    },
-  );
-  const json = await res.json();
-  if (!res.ok) throw new Error(json.error || `HTTP ${res.status}`);
-  return json;
+  const res = await fetch(`${base(apiBase)}/api/articles/${encodeURIComponent(slug)}`, {
+    method: "DELETE",
+    headers: auth(token),
+  });
+  return parse(res);
 }

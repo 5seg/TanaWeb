@@ -1,9 +1,10 @@
 {
   "$schema": "https://json.schemastore.org/web-manifest-combined.json",
-  "name": "qwik-project-name",
-  "short_name": "Welcome to Qwik",
+  "name": "TanaWeb",
+  "short_name": "TanaWeb",
   "start_url": ".",
   "display": "standalone",
-  "background_color": "#fff",
-  "description": "A Qwik project app."
+  "background_color": "#f7f5f0",
+  "theme_color": "#f7f5f0",
+  "description": "Web editor for Tana CMS"
 }
