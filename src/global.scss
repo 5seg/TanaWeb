@@ -27,15 +27,9 @@
   --shadow: 0 12px 40px rgba(40, 32, 16, 0.18);
   --scrim: rgba(33, 31, 27, 0.4);
 
-  --serif:
-    "Newsreader", "Noto Serif JP", "Hiragino Mincho ProN", "Yu Mincho",
-    "Iowan Old Style", "Palatino Linotype", Georgia, serif;
-  --sans:
-    system-ui, -apple-system, "Segoe UI", "Hiragino Sans", "Yu Gothic UI",
-    "Noto Sans JP", Roboto, "Noto Serif JP", sans-serif;
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --mono:
-    ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas,
-    "Liberation Mono", monospace;
+    ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
 
   --radius: 6px;
   --ease: 140ms ease;
@@ -213,10 +207,8 @@ button {
 
   .brand {
     position: relative;
-    font-family: var(--serif);
-    font-size: 1.45rem;
-    font-weight: 500;
-    font-style: italic;
+    font-size: 1.2rem;
+    font-weight: 700;
     letter-spacing: -0.01em;
     line-height: 1;
     padding-bottom: 5px;
@@ -306,9 +298,8 @@ dialog.recover {
   }
 
   h2 {
-    font-family: var(--serif);
-    font-weight: 500;
-    font-size: 1.4rem;
+    font-weight: 600;
+    font-size: 1.3rem;
     margin-bottom: 16px;
   }
 
@@ -471,11 +462,11 @@ dialog.recover {
     justify-content: space-between;
     min-height: 44px;
     padding: 0 12px 0 16px;
-    font-family: var(--serif);
-    font-size: 1.05rem;
+    font-size: 1rem;
+    font-weight: 600;
 
     .count {
-      font-family: var(--sans);
+      font-weight: 400;
       font-size: 0.78rem;
       color: var(--muted);
       margin-left: 4px;
@@ -595,8 +586,8 @@ dialog.recover {
     gap: 8px;
 
     .empty-title {
-      font-family: var(--serif);
-      font-size: 1.1rem;
+      font-size: 1.05rem;
+      font-weight: 600;
       color: var(--ink);
     }
   }
@@ -615,12 +606,13 @@ dialog.recover {
 }
 
 .editor-pane {
-  flex: 1 1 50%;
+  flex: 1 1 0;
+  min-width: 280px;
   display: flex;
   flex-direction: column;
   border-right: 1px solid var(--line);
   background: var(--surface);
-  min-width: 0;
+  container-type: inline-size;
 
   .title-input {
     flex: none;
@@ -629,9 +621,8 @@ dialog.recover {
     border: none;
     border-bottom: 2px solid transparent;
     background: transparent;
-    font-family: var(--serif);
-    font-size: 2.1rem;
-    font-weight: 500;
+    font-size: 2rem;
+    font-weight: 600;
     line-height: 1.25;
     letter-spacing: -0.01em;
 
@@ -723,6 +714,31 @@ dialog.recover {
   }
 }
 
+/* The editor can be narrow next to the fixed-width preview, not just on phones. */
+.editor-pane {
+  @container (max-width: 520px) {
+    .title-input {
+      padding: 18px 16px 4px;
+      font-size: 1.6rem;
+    }
+    .meta {
+      padding: 4px 16px 10px;
+    }
+    .meta-row {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 0;
+    }
+    .switch {
+      align-self: flex-start;
+    }
+    textarea {
+      padding: 16px 16px 32px;
+      font-size: 0.9rem;
+    }
+  }
+}
+
 .title-input:focus-visible {
   border-bottom-color: var(--accent);
 }
@@ -786,204 +802,226 @@ dialog.recover {
   }
 }
 
-/* ---------- Preview ---------- */
+/* ---------- Preview ----------
+ * Reproduces https://5seg.top/articles/<slug> (index.css, kiso.css, card.css and
+ * the article page's inline style) so Markdown wraps at the same characters.
+ * The pane is a container standing in for the site's viewport; the 768px
+ * breakpoint becomes a container query. The pane basis is 768px + the 10px
+ * scrollbar gutter so a 1440px window gets the site's desktop layout.
+ * Intentionally independent of the app theme and fonts. */
 .preview-pane {
-  flex: 1 1 50%;
-  min-width: 0;
-  overflow-y: auto;
-  background: var(--bg);
-  padding: 44px 32px 80px;
+  flex: 0 1 778px;
+  min-width: 240px;
+  container-type: inline-size;
+  background: #381d24;
+  color: #dfcfd2;
+  text-align: center;
+  /* kiso.css :root */
+  font-family: sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  text-spacing-trim: trim-start;
+  text-autospace: normal;
+  line-break: strict;
+  overflow-wrap: anywhere;
+  text-size-adjust: 100%;
+  --site-mono:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+    "Courier New", monospace;
 
-  .article {
-    max-width: 68ch;
-    margin: 0 auto;
-    font-family: var(--serif);
-    font-size: 1.08rem;
-    line-height: 1.8;
-    overflow-wrap: anywhere;
-  }
+  .site-scroll {
+    height: 100%;
+    overflow-y: auto;
+    scrollbar-gutter: stable;
 
-  .preview-header {
-    margin-bottom: 2rem;
+    /* index.css: 10px custom scrollbar (touch devices keep overlay ones). */
+    @media not (pointer: coarse) {
+      &::-webkit-scrollbar,
+      pre::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+      }
+      &::-webkit-scrollbar-track,
+      pre::-webkit-scrollbar-track {
+        box-shadow: inset 0 0 5px grey;
+        border-radius: 10px;
+      }
+      &::-webkit-scrollbar-thumb,
+      pre::-webkit-scrollbar-thumb {
+        background: #8e8183;
+        border-radius: 10px;
 
-    h1 {
-      font-size: 2.5rem;
-      font-weight: 500;
-      line-height: 1.2;
-      letter-spacing: -0.015em;
-      text-wrap: balance;
-    }
-
-    .desc {
-      margin-top: 0.7rem;
-      font-size: 1.15rem;
-      line-height: 1.6;
-      font-style: italic;
-      color: var(--muted);
-    }
-
-    .tags {
-      margin-top: 1rem;
-      display: flex;
-      gap: 6px 8px;
-      flex-wrap: wrap;
-      font-family: var(--sans);
-
-      .tag {
-        font-size: 0.78rem;
-        line-height: 1;
-        color: var(--accent);
-        padding: 5px 9px;
-        border: 1px solid var(--line-strong);
-        border-radius: 999px;
+        &:hover {
+          background: #dfcfd2;
+        }
       }
     }
   }
 
-  .preview-body {
+  .site-body {
+    width: 100%;
+  }
+  @container (min-width: 768px) {
+    .site-body {
+      margin-inline: auto;
+      width: 48rem;
+    }
+  }
+
+  /* card.css */
+  .card {
+    margin: 1.5rem 1rem;
+    padding-block: 1.5rem;
+    border-radius: 0.75rem;
+    background-color: rgb(0 0 0 / 0.2);
+  }
+
+  .article {
+    padding: 0 1.5rem;
+    text-align: start;
+  }
+
+  .article-pre {
+    h1 {
+      margin-block: 0.67em;
+      font-size: 2em;
+    }
+    .font-mono {
+      font-family: var(--site-mono);
+      color: oklch(55.1% 0.027 264.364);
+    }
+  }
+
+  .article-main {
     &:empty::before {
       content: "Nothing to preview yet.";
-      color: var(--muted);
-      font-style: italic;
+      opacity: 0.6;
     }
 
-    > :first-child {
-      margin-top: 0;
-    }
-
-    h1,
     h2,
     h3,
     h4,
     h5,
     h6 {
-      font-weight: 600;
-      line-height: 1.3;
-      margin: 2em 0 0.6em;
-      letter-spacing: -0.01em;
-      text-wrap: balance;
-    }
-    h1 {
-      font-size: 1.9em;
+      &::before {
+        color: #917378;
+        margin-right: 0.5rem;
+      }
     }
     h2 {
-      font-size: 1.5em;
+      margin-top: 0.1rem;
+      margin-bottom: 0.5rem;
+      border-bottom: #917378 solid 1px;
+      &::before {
+        content: "##";
+      }
     }
     h3 {
-      font-size: 1.22em;
+      margin-top: 0.1rem;
+      margin-bottom: 0.25rem;
+      &::before {
+        content: "###";
+      }
     }
-    h4,
-    h5,
+    h4::before {
+      content: "####";
+    }
+    h5 {
+      font-size: 0.83em;
+    }
     h6 {
-      font-size: 1em;
+      font-size: 0.67em;
     }
-
-    p {
-      margin-bottom: 1.2em;
+    h5::before,
+    h6::before {
+      content: none;
     }
 
     a {
-      color: var(--accent);
+      color: inherit;
       text-decoration: underline;
-      text-decoration-thickness: 1px;
-      text-underline-offset: 0.2em;
-      text-decoration-color: color-mix(in srgb, var(--accent) 45%, transparent);
-
+      text-decoration-thickness: from-font;
+      cursor: pointer;
       &:hover {
-        text-decoration-color: currentColor;
+        color: #b2a6a8;
       }
     }
 
-    strong {
-      font-weight: 600;
+    em {
+      font-weight: bolder;
+      font-style: normal;
     }
 
     ul,
     ol {
-      margin: 0 0 1.2em 1.4em;
-      padding-left: 0.3em;
-
-      li {
-        margin-bottom: 0.3em;
-        padding-left: 0.2em;
-      }
-      li::marker {
-        color: var(--muted);
-      }
+      list-style-type: "";
+    }
+    ul {
+      list-style: disc;
+      margin-left: 1.25em;
     }
 
     code {
-      font-family: var(--mono);
-      font-size: 0.84em;
-      background: var(--code-bg);
-      color: var(--code-ink);
-      padding: 0.15em 0.4em;
-      border-radius: 4px;
+      font-family: var(--site-mono);
+      font-size: inherit;
+      font-variant-ligatures: none;
     }
 
     pre {
-      background: var(--code-bg);
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      padding: 14px 16px;
-      margin: 0 0 1.4em;
-      overflow-x: auto;
-      line-height: 1.6;
-
-      code {
-        background: none;
-        padding: 0;
-        font-size: 0.82em;
-      }
-    }
-
-    blockquote {
-      margin: 0 0 1.4em;
-      padding: 0.1em 0 0.1em 1.2em;
-      border-left: 2px solid var(--accent);
-      color: var(--muted);
-      font-style: italic;
-
-      p:last-child {
-        margin-bottom: 0;
-      }
+      /* shiki dark-plus; font stays the UA 13px monospace like the site's pre.shiki */
+      margin-block: 0.5rem;
+      padding: 0.75rem 0.5rem;
+      background-color: #1e1e1e;
+      color: #d4d4d4;
+      overflow-x: scroll;
+      text-spacing-trim: space-all;
+      text-autospace: no-autospace;
     }
 
     hr {
-      border: none;
-      border-top: 1px solid var(--line-strong);
-      margin: 2.4em auto;
-      width: 4rem;
+      margin-block: 0.5em;
+      margin-inline: auto;
+      overflow: hidden;
+      border: 1px solid rgba(153, 27, 27, 0.5);
+      color: transparent;
     }
 
     img {
-      max-width: 100%;
-      height: auto;
-      border-radius: 6px;
+      max-inline-size: 100%;
+      block-size: auto;
+      vertical-align: bottom;
     }
 
+    table,
+    th,
+    td {
+      border: 1px solid #917378;
+      padding: 0.25em 0.5em;
+    }
     table {
-      display: block;
-      max-width: 100%;
-      overflow-x: auto;
       border-collapse: collapse;
-      margin-bottom: 1.4em;
-      font-family: var(--sans);
-      font-size: 0.88em;
-      line-height: 1.5;
-
-      th,
-      td {
-        padding: 8px 14px 8px 0;
-        border-bottom: 1px solid var(--line);
-        text-align: left;
-      }
-      th {
-        font-weight: 600;
-        border-bottom: 1px solid var(--line-strong);
-        white-space: nowrap;
-      }
+      margin: 0.25em 0;
     }
+    th {
+      font-weight: bold;
+      text-align: unset;
+    }
+  }
+
+  .hr1,
+  .hr2 {
+    margin-inline: auto;
+    overflow: hidden;
+    border: 1px solid rgba(153, 27, 27, 0.5);
+    color: transparent;
+  }
+  .hr1 {
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+  }
+  .hr2 {
+    margin-top: 0.5rem;
+    margin-bottom: 1rem;
   }
 }
 
@@ -1140,37 +1178,9 @@ dialog.recover {
     }
   }
 
-  .editor-pane {
-    .title-input {
-      padding: 18px 16px 4px;
-      font-size: 1.7rem;
-    }
-    .meta {
-      padding: 4px 16px 10px;
-    }
-    .meta-row {
-      flex-direction: column;
-      align-items: stretch;
-      gap: 0;
-    }
-    .switch {
-      align-self: flex-start;
-    }
-    textarea {
-      padding: 16px 16px 32px;
-      font-size: 0.9rem;
-    }
-  }
-
   .preview-pane {
-    padding: 28px 18px 60px;
-
-    .article {
-      font-size: 1.02rem;
-    }
-    .preview-header h1 {
-      font-size: 1.9rem;
-    }
+    flex: 1 1 auto;
+    min-width: 0;
   }
 
   .statusline {

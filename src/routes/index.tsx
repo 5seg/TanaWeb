@@ -94,6 +94,8 @@ export default component$(() => {
   const draftRef = useSignal<HTMLDialogElement>();
   const pendingDraft = useSignal<DraftArticle | null>(null);
   const lastDraftSavedAt = useSignal("");
+  // Shown under the title in the preview, like the live site does.
+  const createdAt = useSignal("");
   const isLoading = useSignal(false);
 
   const articles = useSignal<Article[]>([]);
@@ -163,6 +165,7 @@ export default component$(() => {
     currentArticle.description = d.description || "";
     currentArticle.body = d.body || "";
     currentArticle.published = d.published ?? true;
+    createdAt.value = "";
     tagsInput.value = d.tagsInput || "";
     isEditMode.value = d.isEditMode ?? false;
     setStatus("Restored draft from previous session.");
@@ -210,6 +213,7 @@ export default component$(() => {
       currentArticle.body = art.body || "";
       currentArticle.published = Boolean(art.published);
       currentArticle.tags = art.tags || [];
+      createdAt.value = art.createdAt || "";
       tagsInput.value = (art.tags || []).join(", ");
       savedSnapshot.value = snap(currentArticle, tagsInput.value);
       clearStoredDraft();
@@ -234,6 +238,7 @@ export default component$(() => {
     currentArticle.body = "";
     currentArticle.published = true;
     currentArticle.tags = [];
+    createdAt.value = "";
     tagsInput.value = "";
     savedSnapshot.value = snap(currentArticle, "");
     clearStoredDraft();
@@ -639,7 +644,9 @@ export default component$(() => {
                     <span class="art-title">{a.title}</span>
                     <span class="art-sub">
                       <span class="art-slug">{a.slug}</span>
-                      {!a.published && <span class="art-draft">Draft</span>}
+                      {a.published === false && (
+                        <span class="art-draft">Draft</span>
+                      )}
                       {date && <span class="art-date">{date}</span>}
                     </span>
                   </button>
@@ -757,31 +764,32 @@ export default component$(() => {
 
           {/* Right Preview */}
           <div
+            lang="ja"
             class={`preview-pane ${
               activeTab.value !== "preview" ? "mobile-hidden" : ""
             }`}
           >
-            <article class="article">
-              <header class="preview-header">
-                <h1>{currentArticle.title || "Untitled"}</h1>
-                {currentArticle.description && (
-                  <p class="desc">{currentArticle.description}</p>
-                )}
-                {tagsInput.value && (
-                  <div class="tags">
-                    {parseTags(tagsInput.value).map((t) => (
-                      <span key={t} class="tag">
-                        #{t}
-                      </span>
-                    ))}
+            <div class="site-scroll">
+              <div class="site-body">
+                <div class="card">
+                  <div class="article">
+                    <div class="article-pre">
+                      <h1>{currentArticle.title || "Untitled"}</h1>
+                      <p class="font-mono text-gray-500">
+                        {createdAt.value || "\u00a0"}
+                      </p>
+                    </div>
+                    <main
+                      class="article-main"
+                      dangerouslySetInnerHTML={renderedHtml.value}
+                    />
                   </div>
-                )}
-              </header>
-              <div
-                class="preview-body"
-                dangerouslySetInnerHTML={renderedHtml.value}
-              />
-            </article>
+                  <hr class="hr1" />
+                  <span class="back-link">記事一覧 ↩️</span>
+                  <hr class="hr2" />
+                </div>
+              </div>
+            </div>
           </div>
         </section>
       </main>
@@ -818,18 +826,6 @@ export const head: DocumentHead = {
     {
       name: "description",
       content: "Minimalist WebUI for Tana CMS",
-    },
-  ],
-  links: [
-    { rel: "preconnect", href: "https://fonts.googleapis.com" },
-    {
-      rel: "preconnect",
-      href: "https://fonts.gstatic.com",
-      crossorigin: "anonymous",
-    },
-    {
-      rel: "stylesheet",
-      href: "https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=Noto+Serif+JP:wght@400;600&display=swap",
     },
   ],
 };
